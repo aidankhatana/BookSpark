@@ -8,9 +8,8 @@
 # Install dependencies
 npm install
 
-# Set up environment variables
-cp .env.example .env.local
-# Fill in your API keys (see SETUP.md)
+# Set up environment variables (see SETUP.md)
+# Create .env.local with your API keys
 
 # Run development server
 npm run dev
