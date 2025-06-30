@@ -65,19 +65,21 @@ export const authOptions = {
       return true
     },
     async session({ session, token }: any) {
-      // Use Twitter ID as the session user ID
+      // Use Twitter ID as the session user ID and include email
       if (token.twitter_id) {
         session.user.id = token.twitter_id
         session.user.twitter_username = token.twitter_username
+        session.user.email = token.email
       }
       return session
     },
-    async jwt({ token, account, profile }: any) {
-      // Store Twitter info in JWT
+    async jwt({ token, account, profile, user }: any) {
+      // Store Twitter info and email in JWT
       if (account && profile) {
         const twitterId = profile?.data?.id || profile?.id || account?.providerAccountId
         token.twitter_id = twitterId
         token.twitter_username = profile?.data?.username || profile?.username || profile?.screen_name
+        token.email = user?.email
       }
       return token
     },

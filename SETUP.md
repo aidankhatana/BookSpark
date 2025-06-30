@@ -106,7 +106,32 @@ Follow these steps to set up BookSpark with all required services. Everything is
 - 1,500 requests per day
 - Perfect for development and testing!
 
-### 4. 🔐 NextAuth Configuration
+### 4. 📧 Email Service - Resend (Free)
+
+**Create Account:**
+1. Go to [resend.com](https://resend.com)
+2. Sign up with email or GitHub
+3. Verify your email address
+
+**Get API Key:**
+1. In Resend dashboard, go to **API Keys**
+2. Click "Create API Key"
+3. Name it "BookSpark Development"
+4. Copy the key to your `.env.local`:
+   ```bash
+   RESEND_API_KEY=re_your_resend_api_key_here
+   ```
+
+**Free Limits:**
+- 3,000 emails per month
+- 100 emails per day
+- Perfect for development and initial users!
+
+**Domain Setup (Optional):**
+- For production, add your custom domain
+- For development, you can send from "digest@bookspark.app"
+
+### 5. 🔐 NextAuth Configuration
 
 **Generate Secret:**
 ```bash
@@ -141,6 +166,9 @@ TWITTER_CLIENT_SECRET=your_twitter_oauth2_client_secret
 # Google Gemini AI (Free)
 GOOGLE_AI_API_KEY=AIzaSyC_your_google_ai_api_key_here
 
+# Email Service (Resend)
+RESEND_API_KEY=re_your_resend_api_key_here
+
 # Environment
 NODE_ENV=development
 ```
@@ -164,6 +192,8 @@ NODE_ENV=development
 
 6. **Check AI processing** - Bookmarks should get summaries and action suggestions
 
+7. **Test email digest** - Visit `/api/digest/test` to send a test email
+
 ---
 
 ## 🎯 Verification Checklist
@@ -171,11 +201,13 @@ NODE_ENV=development
 - [ ] Supabase project created and database schema loaded
 - [ ] Twitter Developer account approved and OAuth app configured  
 - [ ] Google AI API key generated
+- [ ] Resend account created and API key configured
 - [ ] All environment variables in `.env.local`
 - [ ] `npm run dev` starts without errors
 - [ ] Can sign in with Twitter successfully
 - [ ] Bookmarks sync from Twitter
 - [ ] AI analysis generates summaries and actions
+- [ ] Test digest email sends successfully
 
 ---
 
@@ -198,6 +230,12 @@ NODE_ENV=development
 
 **Build Errors:**
 - Clear Next.js cache: `rm -rf .next`
+
+**Email Digest Issues:**
+- Verify Resend API key is correct
+- Check your email spam folder
+- Ensure you have bookmarks synced before testing digest
+- For production, verify domain authentication in Resend
 - Reinstall dependencies: `rm -rf node_modules && npm install`
 
 ---

@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
+  const [sendingDigest, setSendingDigest] = useState(false)
 
 
   useEffect(() => {
@@ -70,6 +71,25 @@ export default function Dashboard() {
       alert('❌ Sync failed: Network error')
     } finally {
       setSyncing(false)
+    }
+  }
+
+  async function sendTestDigest() {
+    setSendingDigest(true)
+    try {
+      const response = await fetch('/api/digest/test')
+      const data = await response.json()
+      
+      if (data.success) {
+        alert(`📧 ${data.message}\n\nCheck your email (including spam folder)!`)
+      } else {
+        alert(`❌ Test failed: ${data.error}`)
+      }
+    } catch (error) {
+      console.error('Test digest failed:', error)
+      alert('❌ Test failed: Network error')
+    } finally {
+      setSendingDigest(false)
     }
   }
 
@@ -151,6 +171,13 @@ export default function Dashboard() {
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {syncing ? 'Syncing...' : 'Sync Bookmarks'}
+              </button>
+              <button
+                onClick={sendTestDigest}
+                disabled={sendingDigest}
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingDigest ? 'Sending...' : '📧 Test Digest'}
               </button>
               <button
                 onClick={() => signOut()}
