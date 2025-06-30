@@ -3,18 +3,19 @@ import { TwitterClient } from '@/lib/twitter'
 
 export async function syncUserBookmarks(userId: string) {
   try {
-    // Get user's Twitter token
+    // Get user's Twitter token - look up by twitter_id since session user.id is Twitter ID
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('twitter_token, last_sync_at')
-      .eq('id', userId)
+      .select('id, twitter_id, twitter_token, last_sync_at')
+      .eq('twitter_id', userId)
       .single()
 
     if (userError || !user?.twitter_token) {
       throw new Error('No Twitter token found for user')
     }
 
-    const twitter = new TwitterClient(user.twitter_token)
+    // Pass the Twitter user ID to the client
+    const twitter = new TwitterClient(user.twitter_token, user.twitter_id)
     const { bookmarks, users } = await twitter.getBookmarks()
 
     // Create a lookup for user data
@@ -36,11 +37,11 @@ export async function syncUserBookmarks(userId: string) {
           extractedUrl = bookmark.entities.urls[0].expanded_url
         }
 
-        // Store bookmark (upsert to handle duplicates)
+        // Store bookmark (upsert to handle duplicates) - use database UUID for user_id
         const { error: insertError } = await supabaseAdmin
           .from('bookmarks')
           .upsert({
-            user_id: userId,
+            user_id: user.id, // Use database UUID
             twitter_id: bookmark.id,
             content: bookmark.text,
             author_name: author?.name,
@@ -64,11 +65,11 @@ export async function syncUserBookmarks(userId: string) {
       }
     }
 
-    // Update last sync time
+    // Update last sync time - use database UUID
     await supabaseAdmin
       .from('users')
       .update({ last_sync_at: new Date().toISOString() })
-      .eq('id', userId)
+      .eq('id', user.id)
 
     console.log(`Synced ${processedCount} bookmarks for user ${userId}`)
     return processedCount

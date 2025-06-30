@@ -30,7 +30,7 @@ Visit [http://localhost:3000](http://localhost:3000) to get started!
 - **Frontend**: Next.js 15, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, NextAuth.js
 - **Database**: Supabase (PostgreSQL)
-- **AI**: OpenAI GPT-3.5 Turbo
+- **AI**: Google Gemini 2.5 Flash (Free)
 - **External APIs**: Twitter API v2
 
 ## 📁 Project Structure
@@ -111,4 +111,4 @@ MIT License - see LICENSE file for details.
 
 ---
 
-**Built with ❤️ using Next.js, OpenAI, and Supabase**
+**Built with ❤️ using Next.js, Google AI, and Supabase**

@@ -1,21 +1,38 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
+
+// Helper function to get database user by Twitter ID
+async function getDatabaseUser(twitterId: string) {
+  const { data: user, error } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('twitter_id', twitterId)
+    .single()
+  
+  if (error || !user) {
+    throw new Error('User not found in database')
+  }
+  
+  return user
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth()
+    const sessionUser = await requireAuth()
+    const dbUser = await getDatabaseUser(sessionUser.id) // Get database UUID
+    
     const { searchParams } = new URL(request.url)
     
     const status = searchParams.get('status') || 'new'
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
     
-    let query = supabase
+    let query = supabaseAdmin
       .from('bookmarks')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', dbUser.id) // Use database UUID
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
     
@@ -50,7 +67,9 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const user = await requireAuth()
+    const sessionUser = await requireAuth()
+    const dbUser = await getDatabaseUser(sessionUser.id) // Get database UUID
+    
     const body = await request.json()
     const { bookmarkId, status, snoozeUntil } = body
     
@@ -74,11 +93,11 @@ export async function PATCH(request: NextRequest) {
       updateData.status = 'snoozed'
     }
     
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('bookmarks')
       .update(updateData)
       .eq('id', bookmarkId)
-      .eq('user_id', user.id) // Ensure user can only update their own bookmarks
+      .eq('user_id', dbUser.id) // Use database UUID
     
     if (error) {
       throw new Error(`Failed to update bookmark: ${error.message}`)

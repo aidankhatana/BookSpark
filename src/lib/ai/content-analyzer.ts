@@ -1,8 +1,6 @@
-import OpenAI from 'openai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'placeholder',
-})
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || 'placeholder')
 
 interface AnalysisResult {
   summary: string
@@ -40,31 +38,32 @@ Keep suggestions specific and actionable. For tutorials, suggest "Add to task li
 `
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      max_tokens: 300,
-    })
-
-    const resultText = response.choices[0].message.content || '{}'
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    const resultText = response.text()
     
     try {
-      const result = JSON.parse(resultText)
+      // Extract JSON from response (Gemini sometimes adds extra text)
+      const jsonMatch = resultText.match(/\{[\s\S]*\}/)
+      const jsonText = jsonMatch ? jsonMatch[0] : resultText
+      const parsed = JSON.parse(jsonText)
       
       // Validate the result structure
-      if (!result.summary || !result.contentType || !Array.isArray(result.topics) || !Array.isArray(result.suggestedActions)) {
+      if (!parsed.summary || !parsed.contentType || !Array.isArray(parsed.topics) || !Array.isArray(parsed.suggestedActions)) {
         throw new Error('Invalid AI response structure')
       }
       
       return {
-        summary: result.summary.slice(0, 200), // Limit summary length
-        contentType: result.contentType.toLowerCase(),
-        topics: result.topics.slice(0, 5), // Limit to 5 topics
-        suggestedActions: result.suggestedActions.slice(0, 5) // Limit to 5 actions
+        summary: parsed.summary.slice(0, 200), // Limit summary length
+        contentType: parsed.contentType.toLowerCase(),
+        topics: parsed.topics.slice(0, 5), // Limit to 5 topics
+        suggestedActions: parsed.suggestedActions.slice(0, 5) // Limit to 5 actions
       }
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError)
+      console.error('Raw response:', resultText)
       throw new Error('Invalid AI response format')
     }
   } catch (error) {
@@ -98,15 +97,16 @@ Respond with a JSON array of action strings:
 `
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
-      max_tokens: 150,
-    })
-
-    const resultText = response.choices[0].message.content || '[]'
-    const actions = JSON.parse(resultText)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    const resultText = response.text()
+    
+    // Extract JSON from response
+    const jsonMatch = resultText.match(/\[[\s\S]*\]/)
+    const jsonText = jsonMatch ? jsonMatch[0] : resultText
+    const actions = JSON.parse(jsonText)
     
     if (Array.isArray(actions)) {
       return actions.slice(0, 5)

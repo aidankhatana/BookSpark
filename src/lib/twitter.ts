@@ -38,38 +38,55 @@ interface TwitterApiResponse {
 
 export class TwitterClient {
   private accessToken: string
+  private userId: string
 
-  constructor(accessToken: string) {
+  constructor(accessToken: string, userId?: string) {
     this.accessToken = accessToken
+    this.userId = userId || 'me'
   }
 
   async getBookmarks(maxResults = 100): Promise<{
     bookmarks: TwitterBookmark[]
     users: TwitterUser[]
   }> {
-    const url = new URL('https://api.twitter.com/2/users/me/bookmarks')
-    url.searchParams.set('max_results', maxResults.toString())
-    url.searchParams.set('tweet.fields', 'created_at,author_id,text,attachments,entities')
-    url.searchParams.set('user.fields', 'name,username')
-    url.searchParams.set('expansions', 'author_id,attachments.media_keys')
+    try {
+      // Use the user ID instead of 'me' if provided
+      const url = `https://api.twitter.com/2/users/${this.userId}/bookmarks`
+      const params = new URLSearchParams({
+        'max_results': maxResults.toString(),
+        'tweet.fields': 'created_at,author_id,text,attachments,entities',
+        'user.fields': 'name,username',
+        'expansions': 'author_id,attachments.media_keys'
+      })
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Authorization': `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    })
+      console.log('🐦 Making Twitter API call:', `${url}?${params.toString()}`)
+      
+      const response = await fetch(`${url}?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Twitter API error: ${response.status} - ${errorText}`)
-    }
+      console.log('🐦 Twitter API response status:', response.status)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('🐦 Twitter API error response:', errorText)
+        throw new Error(`Twitter API error: ${response.status} - ${errorText}`)
+      }
 
-    const data: TwitterApiResponse = await response.json()
-    
-    return {
-      bookmarks: data.data || [],
-      users: data.includes?.users || [],
+      const data: TwitterApiResponse = await response.json()
+      console.log('🐦 Twitter API response data:', JSON.stringify(data, null, 2))
+      
+      return {
+        bookmarks: data.data || [],
+        users: data.includes?.users || [],
+      }
+    } catch (error) {
+      console.error('🐦 Twitter API call failed:', error)
+      throw error
     }
   }
 
