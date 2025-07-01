@@ -21,6 +21,7 @@ CREATE TABLE users (
   twitter_token TEXT, -- Encrypted OAuth token
   twitter_refresh_token TEXT, -- Encrypted refresh token
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   last_sync_at TIMESTAMP WITH TIME ZONE,
   
   -- Digest preferences

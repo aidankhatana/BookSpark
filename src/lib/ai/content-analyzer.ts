@@ -11,30 +11,39 @@ interface AnalysisResult {
 
 export async function analyzeContent(content: string, url?: string): Promise<AnalysisResult> {
   const prompt = `
-Analyze this saved content and provide:
-1. A 1-2 sentence summary that captures the main point
-2. Content type (tweet, article, tutorial, inspiration, news, habit, etc.)
-3. 2-3 relevant topic tags (lowercase, no spaces)
-4. 3-5 suggested actions the user might want to take
+Analyze this bookmarked content and provide intelligent, actionable insights:
 
 Content: "${content}"
 ${url ? `URL: ${url}` : ''}
 
+Provide:
+1. Compelling 1-2 sentence summary highlighting the key value or insight
+2. Precise content classification
+3. 2-4 relevant, focused topic tags (lowercase, no spaces)
+4. 3-4 specific, actionable suggestions tailored to content type
+
+For different content types, suggest appropriate actions:
+- Learning/Tutorials: "Schedule learning session", "Practice [specific skill]", "Create study notes"
+- Tools/Products: "Evaluate for [use case]", "Compare with current tools", "Start free trial"
+- Insights/Ideas: "Apply to [specific project]", "Share with [relevant team]", "Brainstorm applications"
+- News/Updates: "Monitor for changes", "Update current strategy", "Follow related developments"
+- Inspiration: "Save to idea vault", "Create similar content", "Extract key principles"
+
+Use action verbs like: Schedule, Practice, Evaluate, Apply, Research, Create, Monitor, Compare, Document, Implement, Connect, Follow-up.
+
 Respond in JSON format:
 {
-  "summary": "Brief summary here",
-  "contentType": "tweet",
-  "topics": ["topic1", "topic2"],
+  "summary": "Engaging summary highlighting value and relevance",
+  "contentType": "tutorial|tool|insight|news|inspiration|opinion|thread|article",
+  "topics": ["relevant", "keywords"],
   "suggestedActions": [
-    "Add to task list",
-    "Save for inspiration",
-    "Set reminder to practice",
-    "Research more about this topic",
-    "Share with team"
+    "Specific actionable task with clear target",
+    "Another targeted suggestion",
+    "Third relevant action"
   ]
 }
 
-Keep suggestions specific and actionable. For tutorials, suggest "Add to task list" or "Set reminder to practice". For inspiration, suggest "Save for inspiration" or "Create similar content". For habits, suggest "Set daily reminder" or "Create routine".
+Make suggestions immediately actionable and contextually relevant.
 `
 
   try {
