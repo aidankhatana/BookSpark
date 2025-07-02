@@ -1,7 +1,5 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 interface DigestBookmark {
   id: string
   content: string
@@ -25,6 +23,14 @@ interface DigestEmailData {
 }
 
 export class EmailService {
+  private getResendClient(): Resend {
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY environment variable is not set')
+    }
+    return new Resend(apiKey)
+  }
+
   private generateActionLink(userId: string, bookmarkId: string, action: string): string {
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
     const token = Buffer.from(`${userId}:${bookmarkId}:${action}`).toString('base64')
@@ -173,6 +179,7 @@ Unsubscribe: ${data.unsubscribeUrl}
         return true // Not an error, just nothing to send
       }
 
+      const resend = this.getResendClient()
       const result = await resend.emails.send({
         from: 'BookSpark <digest@bookspark.app>',
         to: user.email,
