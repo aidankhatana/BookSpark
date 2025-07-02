@@ -187,7 +187,7 @@ Unsubscribe: ${data.unsubscribeUrl}
       console.log(`✅ Digest sent to ${user.email}:`, result.data?.id)
       return true
     } catch (error) {
-      console.error(`❌ Failed to send digest to ${user.email}:`, error)
+      console.error(`❌ Failed to send digest to ${data.user.email}:`, error)
       return false
     }
   }
