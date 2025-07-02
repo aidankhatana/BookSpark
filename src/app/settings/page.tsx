@@ -205,7 +205,7 @@ export default function Settings() {
                     <option value="19:00:00">7:00 PM</option>
                     <option value="20:00:00">8:00 PM</option>
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Choose when you'd like to receive your daily digest</p>
+                  <p className="text-xs text-gray-500 mt-1">Choose when you&apos;d like to receive your daily digest</p>
                 </div>
 
                 <div>

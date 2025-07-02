@@ -32,7 +32,7 @@ export class EmailService {
   }
 
   private generateDigestHtml(data: DigestEmailData): string {
-    const { user, bookmarks, unsubscribeUrl } = data
+    const { bookmarks, unsubscribeUrl } = data
 
     return `
 <!DOCTYPE html>
@@ -135,12 +135,12 @@ export class EmailService {
   }
 
   private generateDigestText(data: DigestEmailData): string {
-    const { user, bookmarks } = data
+    const { bookmarks } = data
 
     return `
 BookSpark Daily Digest - ${new Date().toLocaleDateString()}
 
-Hello ${user.name}!
+Hello ${data.user.name}!
 
 You have ${bookmarks.length} bookmarks ready for action today:
 
@@ -150,9 +150,9 @@ ${index + 1}. ${bookmark.summary}
    Topics: ${bookmark.topics.join(', ') || 'None'}
    
    Quick Actions:
-   - Mark Done: ${this.generateActionLink(user.id, bookmark.id, 'done')}
-   - Snooze: ${this.generateActionLink(user.id, bookmark.id, 'snooze')}
-   - View: ${this.generateActionLink(user.id, bookmark.id, 'view')}
+   - Mark Done: ${this.generateActionLink(data.user.id, bookmark.id, 'done')}
+   - Snooze: ${this.generateActionLink(data.user.id, bookmark.id, 'snooze')}
+   - View: ${this.generateActionLink(data.user.id, bookmark.id, 'view')}
 
 `).join('')}
 
