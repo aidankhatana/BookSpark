@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       }
       
       [userId, bookmarkId, action] = parts
-    } catch (error) {
+    } catch {
       return new NextResponse('Invalid token format', { status: 400 })
     }
 
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Update bookmark status
-    const updateData: any = { status: newStatus }
+    const updateData: { status: string; snooze_until?: string } = { status: newStatus }
     
     if (action === 'snooze') {
       // Set snooze_until to 7 days from now
