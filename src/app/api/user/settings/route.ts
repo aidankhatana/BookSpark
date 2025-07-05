@@ -17,14 +17,14 @@ export async function GET() {
     // Get user settings from database
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('digest_enabled, digest_time, timezone')
+      .select('digest_enabled, digest_time, timezone, email')
       .eq('twitter_id', session.user.id)
       .single()
 
     if (error) {
       console.error('Error fetching user settings:', error)
       return NextResponse.json(
-        { success: false, error: 'Failed to fetch settings' },
+        { success: false, error: `Failed to fetch settings: ${error.message}` },
         { status: 500 }
       )
     }
@@ -34,7 +34,8 @@ export async function GET() {
       settings: {
         digest_enabled: user.digest_enabled ?? true,
         digest_time: user.digest_time ?? '08:00:00',
-        timezone: user.timezone ?? 'UTC'
+        timezone: user.timezone ?? 'UTC',
+        email: user.email || ''
       }
     })
   } catch (error) {
@@ -58,10 +59,12 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { digest_enabled, digest_time, timezone } = body
+    console.log('Update request body:', body)
+    
+    const { digest_enabled, digest_time, timezone, email } = body
 
     // Validate the input
-    if (typeof digest_enabled !== 'boolean') {
+    if (digest_enabled !== undefined && typeof digest_enabled !== 'boolean') {
       return NextResponse.json(
         { success: false, error: 'digest_enabled must be a boolean' },
         { status: 400 }
@@ -76,24 +79,66 @@ export async function PUT(req: NextRequest) {
       )
     }
 
+    // Validate email format if provided
+    if (email && email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid email format' },
+        { status: 400 }
+      )
+    }
+
+    // Prepare update data with proper typing
+    const updateData: {
+      digest_enabled?: boolean
+      digest_time?: string
+      timezone?: string
+      email?: string | null
+      updated_at: string
+    } = {
+      updated_at: new Date().toISOString()
+    }
+
+    // Only update fields that are provided
+    if (digest_enabled !== undefined) {
+      updateData.digest_enabled = digest_enabled
+    }
+    if (digest_time) {
+      updateData.digest_time = digest_time
+    }
+    if (timezone) {
+      updateData.timezone = timezone
+    }
+    if (email !== undefined) {
+      updateData.email = email.trim() || null
+    }
+
+    console.log('Updating user settings:', updateData)
+    console.log('For user ID:', session.user.id)
+
     // Update user settings in database
-    const { error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('users')
-      .update({
-        digest_enabled,
-        digest_time: digest_time || '08:00:00',
-        timezone: timezone || 'UTC',
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('twitter_id', session.user.id)
+      .select()
 
     if (error) {
-      console.error('Error updating user settings:', error)
+      console.error('Supabase error details:', error)
       return NextResponse.json(
-        { success: false, error: 'Failed to update settings' },
+        { success: false, error: `Database error: ${error.message}` },
         { status: 500 }
       )
     }
+
+    if (!data || data.length === 0) {
+      console.error('No user found with twitter_id:', session.user.id)
+      return NextResponse.json(
+        { success: false, error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    console.log('Settings updated successfully for user:', session.user.id)
 
     return NextResponse.json({
       success: true,
@@ -102,7 +147,7 @@ export async function PUT(req: NextRequest) {
   } catch (error) {
     console.error('Settings update error:', error)
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     )
   }

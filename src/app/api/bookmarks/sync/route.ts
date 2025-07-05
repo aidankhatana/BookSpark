@@ -10,16 +10,18 @@ export async function POST() {
     console.log(`Starting bookmark sync for user ${user.id}`)
     
     // Sync bookmarks from Twitter
-    const syncedCount = await syncUserBookmarks(user.id)
+    const syncResult = await syncUserBookmarks(user.id)
     
     // Process any unanalyzed bookmarks
     const processedCount = await processUnanalyzedBookmarks(10)
     
     return NextResponse.json({ 
       success: true, 
-      message: `Synced ${syncedCount} bookmarks, processed ${processedCount} with AI`,
-      syncedCount,
-      processedCount
+      message: `Synced ${syncResult.processed} bookmarks (${syncResult.new} new, ${syncResult.updated} updated), processed ${processedCount} with AI`,
+      processed: syncResult.processed,
+      new: syncResult.new,
+      updated: syncResult.updated,
+      aiProcessed: processedCount
     })
   } catch (error) {
     console.error('Bookmark sync failed:', error)
